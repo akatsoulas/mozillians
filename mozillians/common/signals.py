@@ -1,5 +1,4 @@
 from django.db.models import signals
-from django.conf import settings
 
 from haystack.signals import BaseSignalProcessor
 
@@ -20,11 +19,10 @@ class SearchSignalProcessor(BaseSignalProcessor):
 
     def handle_save(self, sender, instance, **kwargs):
         # Do not index incomplete profiles and not visible groups.
-        if not settings.DINO_PARK_ACTIVE:
-            if ((isinstance(instance, UserProfile) and instance.is_complete)
-                or (isinstance(instance, Group) and instance.visible)
-                    or (isinstance(instance, IdpProfile))):
-                super(SearchSignalProcessor, self).handle_save(sender, instance, **kwargs)
+        if ((isinstance(instance, UserProfile) and instance.is_complete)
+            or (isinstance(instance, Group) and instance.visible)
+                or (isinstance(instance, IdpProfile))):
+            super(SearchSignalProcessor, self).handle_save(sender, instance, **kwargs)
 
     def teardown(self):
         signals.post_save.disconnect(self.handle_save, sender=UserProfile)

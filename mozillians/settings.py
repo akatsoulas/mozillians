@@ -56,7 +56,6 @@ INSTALLED_APPS = (
     'cities_light',
     'axes',
     'haystack',
-    'graphene_django',
 
     'mozillians',
     'mozillians.users',
@@ -69,8 +68,6 @@ INSTALLED_APPS = (
     'mozillians.announcements',
     'mozillians.humans',
     'mozillians.geo',
-    'mozillians.graphql_profiles',
-    'mozillians.dino_park',
 
     'sorl.thumbnail',
     'import_export',
@@ -692,7 +689,6 @@ STRONGHOLD_EXCEPTIONS = ['^%s' % MEDIA_URL, # noqa
                          '^/api/',
                          '^/oidc/authenticate/',
                          '^/oidc/callback/',
-                         '^/[\w-]+/graphql/',
                          # Allow autocomplete urls for profile registration
                          '^/[\w-]+/skills-autocomplete/',
                          '^/[\w-]+/country-autocomplete/',
@@ -713,27 +709,6 @@ REST_FRAMEWORK = {
     ),
 }
 
-# Django Graphene
-GRAPHENE = {
-    'SCHEMA': 'mozillians.schema.schema',
-}
-
-DINO_PARK_ACTIVE = config('DINO_PARK_ACTIVE', default=False, cast=bool)
-# Provide S3 storage backend
-if DINO_PARK_ACTIVE and not DEV:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME',
-                                     default='kubernetes-mozillians-stage')
-    DEFAULT_AVATAR_PATH = config('DEFAULT_AVATAR_PATH', default=urljoin(MEDIA_URL, DEFAULT_AVATAR))
-    CSP_IMG_SRC = CSP_IMG_SRC + ('https://' + AWS_STORAGE_BUCKET_NAME + '.s3.amazonaws.com',)
-
-    # Enable seamless login middleware
-    MIDDLEWARE.append('mozillians.common.middleware.DinoParkLoginMiddleware')
-
-# Dino Park configuration
-DINO_PARK_SEARCH_SVC = config('DINO_PARK_SEARCH_SVC', default='dino-park-search-service')
-DINO_PARK_ORGCHART_SVC = config('DINO_PARK_ORGCHART_SVC', default='dino-tree-service')
-
 if DEV:
     CSP_FONT_SRC += (
         'http://*.mozilla.net',
@@ -743,27 +718,18 @@ if DEV:
     CSP_IMG_SRC += (
         'http://*.mozilla.net',
         'http://*.mozilla.org',
-        'http://dinopark.mozilla.community',
     )
     CSP_SCRIPT_SRC += (
         "'unsafe-inline'",
         "'unsafe-eval'",
         'http://*.mozilla.net',
         'http://*.mozilla.org',
-        'http://cdn.jsdelivr.net',
-        'http://dinopark.mozilla.community',
     )
     CSP_STYLE_SRC += (
         'http://*.mozilla.net',
         'http://*.mozilla.org',
-        'http://cdn.jsdelivr.net',
-        'http://dinopark.mozilla.community',
     )
 
 if DEBUG:
     for backend in TEMPLATES:
         backend['OPTIONS']['debug'] = DEBUG
-
-    GRAPHENE['MIDDLEWARE'] = [
-        'graphene_django.debug.DjangoDebugMiddleware'
-    ]
